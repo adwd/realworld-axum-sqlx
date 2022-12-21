@@ -217,3 +217,18 @@ pub(in crate::http) async fn feed_articles(
         articles,
     }))
 }
+
+mod test {
+    use sqlx::PgPool;
+
+    #[sqlx::test(fixtures("users"))]
+    async fn list_articles_test(pool: PgPool) -> sqlx::Result<()> {
+        let mut conn = pool.acquire().await?;
+
+        let _result = sqlx::query("SELECT * FROM articles")
+            .fetch_one(&mut conn)
+            .await?;
+
+        Ok(())
+    }
+}
