@@ -1,11 +1,11 @@
 use crate::http::error::Error;
-use axum::body::Body;
-use axum::extract::{Extension, FromRequest, RequestParts};
+use axum::extract::{Extension, FromRequestParts};
+use axum::http::request::Parts;
 
 use crate::http::ApiContext;
 use async_trait::async_trait;
 use axum::http::header::AUTHORIZATION;
-use axum::http::HeaderValue;
+use axum::http::{HeaderValue, StatusCode};
 use hmac::{Hmac, NewMac};
 use jwt::{SignWithKey, VerifyWithKey};
 use sha2::Sha384;
@@ -32,6 +32,7 @@ pub struct AuthUser {
 ///
 /// This is in contrast to directly using `Option<AuthUser>`, which will be `None` if there
 /// is *any* error in deserializing, which isn't exactly what we want.
+#[derive(axum_macros::FromRequestParts)]
 pub struct MaybeAuthUser(pub Option<AuthUser>);
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -147,42 +148,26 @@ impl MaybeAuthUser {
 // out of it that you couldn't write your own middleware for, except with a bunch of extra
 // boilerplate.
 #[async_trait]
-impl FromRequest for AuthUser {
-    type Rejection = Error;
+impl<S> FromRequestParts<S> for AuthUser
+where
+    S: Send + Sync,
+{
+    type Rejection = (StatusCode, &'static str);
 
-    async fn from_request(req: &mut RequestParts<Body>) -> Result<Self, Self::Rejection> {
-        let ctx: Extension<ApiContext> = Extension::from_request(req)
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let ctx = Extension::from_request_parts(parts, state)
             .await
             .expect("BUG: ApiContext was not added as an extension");
 
-        // Get the value of the `Authorization` header, if it was sent at all.
-        let auth_header = req
-            .headers()
-            .ok_or(Error::Unauthorized)?
-            .get(AUTHORIZATION)
-            .ok_or(Error::Unauthorized)?;
-
-        Self::from_authorization(&ctx, auth_header)
-    }
-}
-
-#[async_trait]
-impl FromRequest for MaybeAuthUser {
-    type Rejection = Error;
-
-    async fn from_request(req: &mut RequestParts<Body>) -> Result<Self, Self::Rejection> {
-        let ctx: Extension<ApiContext> = Extension::from_request(req)
-            .await
-            .expect("BUG: ApiContext was not added as an extension");
-
-        Ok(Self(
-            // Get the value of the `Authorization` header, if it was sent at all.
-            req.headers()
-                .and_then(|headers| {
-                    let auth_header = headers.get(AUTHORIZATION)?;
-                    Some(AuthUser::from_authorization(&ctx, auth_header))
-                })
-                .transpose()?,
-        ))
+        if let Some(auth_header) = parts.headers.get(AUTHORIZATION) {
+            Self::from_authorization(&ctx, auth_header).map_err(|_e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "TODO: convert error to response",
+                )
+            })
+        } else {
+            Err((StatusCode::BAD_REQUEST, "`User-Agent` header is missing"))
+        }
     }
 }
