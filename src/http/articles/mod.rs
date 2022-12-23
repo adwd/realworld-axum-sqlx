@@ -68,7 +68,7 @@ struct UpdateArticle {
     // Interestingly, the spec omits `tagList` from this route.
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Article {
     slug: String,

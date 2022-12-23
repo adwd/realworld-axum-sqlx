@@ -25,7 +25,7 @@ struct ProfileBody {
     profile: Profile,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Debug)]
 pub struct Profile {
     pub username: String,
     pub bio: String,

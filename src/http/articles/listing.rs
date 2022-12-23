@@ -218,17 +218,35 @@ pub(in crate::http) async fn feed_articles(
     }))
 }
 
+#[cfg(test)]
 mod test {
+    use std::sync::Arc;
+
+    use crate::config::Config;
+
+    use super::*;
+
     use sqlx::PgPool;
 
-    #[sqlx::test(fixtures("users"))]
-    async fn list_articles_test(pool: PgPool) -> sqlx::Result<()> {
-        let mut conn = pool.acquire().await?;
+    #[sqlx::test(fixtures("user", "article"))]
+    async fn list_articles_test(pool: PgPool) {
+        let result = list_articles(
+            MaybeAuthUser(None),
+            Extension(ApiContext {
+                config: Arc::new(Config {
+                    database_url: "".to_string(),
+                    hmac_key: "".to_string(),
+                }),
+                db: pool,
+            }),
+            Query(ListArticlesQuery {
+                ..Default::default()
+            }),
+        )
+        .await
+        .expect("result should be ok");
 
-        let _result = sqlx::query("SELECT * FROM articles")
-            .fetch_one(&mut conn)
-            .await?;
-
-        Ok(())
+        assert_eq!(result.articles_count, 1);
+        assert_eq!(result.articles[0].slug, "slug");
     }
 }
