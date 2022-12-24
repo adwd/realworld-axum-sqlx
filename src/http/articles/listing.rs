@@ -220,13 +220,10 @@ pub(in crate::http) async fn feed_articles(
 
 #[cfg(test)]
 mod test {
-    use std::sync::Arc;
-
-    use crate::config::Config;
-
     use super::*;
-
+    use crate::config::Config;
     use sqlx::PgPool;
+    use std::sync::Arc;
 
     #[sqlx::test(fixtures("user", "article"))]
     async fn list_articles_test(pool: PgPool) {
