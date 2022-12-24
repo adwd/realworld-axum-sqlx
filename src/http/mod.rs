@@ -37,6 +37,7 @@ pub use error::{Error, ResultExt};
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 
 /// The core type through which handler functions can access common API state.
@@ -59,6 +60,11 @@ struct ApiContext {
 }
 
 pub async fn serve(config: Config, db: PgPool) -> anyhow::Result<()> {
+    let cors = CorsLayer::new()
+        .allow_headers(Any)
+        .allow_methods(Any)
+        .allow_origin(Any);
+
     // Bootstrapping an API is both more intuitive with Axum than Actix-web but also
     // a bit more confusing at the same time.
     //
@@ -79,7 +85,8 @@ pub async fn serve(config: Config, db: PgPool) -> anyhow::Result<()> {
                 db,
             }))
             // Enables logging. Use `RUST_LOG=tower_http=debug`
-            .layer(TraceLayer::new_for_http()),
+            .layer(TraceLayer::new_for_http())
+            .layer(cors),
     );
 
     // We use 8080 as our default HTTP server port, it's pretty easy to remember.
