@@ -3,43 +3,47 @@ name = "realworld-axum-sqlx"
 version = "0.1.0"
 edition = "2021"
 publish = false
-authors = [
-    "Austin Bonander <austin@launchbadge.com>"
-]
+authors = ["Austin Bonander <austin@launchbadge.com>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 # Core dependencies: runtime, HTTP framework and database client.
-futures = "0.3"
-tokio = { version = "1.23.0", features = ["macros", "rt-multi-thread"] }
-axum = { version = "0.6.1", features = ["tower-log", "macros"] }
-sqlx = { version = "0.6.2", features = ["runtime-tokio-native-tls", "postgres", "uuid", "time", "migrate"] }
-clap = { version = "4.0", features = ["env", "unstable-doc"] }
+futures = "0.3.28"
+tokio = { version = "1.29.1", features = ["macros", "rt-multi-thread"] }
+axum = { version = "0.6.19", features = ["tower-log", "macros"] }
+sqlx = { version = "0.7.1", features = [
+    "runtime-tokio-native-tls",
+    "postgres",
+    "uuid",
+    "time",
+    "migrate",
+] }
+clap = { version = "4.3.19", features = ["env", "unstable-doc"] }
 
-serde = { version = "1.0.151", features = ["derive"] }
+serde = { version = "1.0.177", features = ["derive"] }
 
 # State of the art password hashing.
 argon2 = "0.4.1"
 
 # Axum builds on the types in Tower
 tower = "0.4.13"
-tower-http = { version = "0.3.5", features = ["trace", "cors"] }
+tower-http = { version = "0.4.3", features = ["trace", "cors"] }
 
 jwt = "0.16"
 hmac = "0.12"
 sha2 = "0.10"
-time = { version = "0.3.17", features = ["serde"] }
+time = { version = "0.3.23", features = ["serde"] }
 
-uuid = { version = "1.2.2", features = ["serde"] }
+uuid = { version = "1.4.1", features = ["serde"] }
 
 # Utility Crates
-anyhow = "1.0.68"
-async-trait = "0.1.60"
+anyhow = "1.0.72"
+async-trait = "0.1.72"
 dotenv = "0.15.0"
 env_logger = "0.10"
-itertools = "0.10.1"
-log = "0.4.14"
-rand = "0.8.4"
-thiserror = "1.0.30"
-axum-macros = "0.3.0"
+itertools = "0.11.0"
+log = "0.4.19"
+rand = "0.8.5"
+thiserror = "1.0.44"
+axum-macros = "0.3.8"
